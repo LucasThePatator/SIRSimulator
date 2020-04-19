@@ -25,8 +25,8 @@ class SIRSimulator:
         return True
 
     def initialize_simulation(self):
-        time = self.clock.get_time()
-        self.world.initialize(500, self.size, time)
+        time = pygame.time.get_ticks()
+        self.world.initialize(200, self.size, time)
         self.disease.initialize(self.world, time)
 
     def on_loop(self):
@@ -75,7 +75,6 @@ class SIRSimulator:
             print("fps : " + str(self.clock.get_fps()) + "    ")
             self.cursor_steps += 1
             print(Cursor.UP(self.cursor_steps + 1))
-
             self.clock.tick(60)
         self.on_cleanup()
 

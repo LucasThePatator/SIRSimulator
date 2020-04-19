@@ -6,7 +6,7 @@ class Disease:
         self.contagion_probability = 0.5
         self.contagion_distance = 20
         self.contagion_distance_square = self.contagion_distance*self.contagion_distance
-        self.recovery_time = 20*1000
+        self.recovery_time = 4*1000
         self.world = None
         self.last_update_time = None
 
@@ -23,7 +23,7 @@ class Disease:
             p.states[1] = (1 - to_recovery)*p.states[1]
             p.states[2] = np.logical_or(to_recovery, p.states[2])
 
-        self.interact( current_proba, time)
+        self.interact(current_proba, time)
         self.last_update_time = time
 
     def interact(self, current_proba, time):
@@ -52,8 +52,9 @@ class World :
         self.populations = []
         self.populations.append(Population(behaviours.RandomBehaviour(), self))
         self.populations[-1].initialize(nb_actors, time)
-        self.populations[-1].states[0,0] = 0
-        self.populations[-1].states[1,0] = 1
+        self.populations[-1].states[0, 0] = 0
+        self.populations[-1].states[1, 0] = 1
+        self.last_update_time = time
 
     def step(self, time):
         for p in self.populations:

@@ -1,5 +1,4 @@
 import numpy as np
-from utils import clip
 
 class Behaviour:
     def __init__(self):
@@ -56,6 +55,23 @@ class RandomBehaviour(Behaviour):
         delta = time - self.last_update_time
         acceleration_polar_coords = np.array([[self.max_acceleration * delta * 0.001], [2*np.pi]]) * np.random.random_sample((2,self.population.size))
         self.speed += acceleration_polar_coords[0] * [np.cos(acceleration_polar_coords[1]), np.sin(acceleration_polar_coords[1])]
+
+        self.speed = np.clip(self.speed, -self.max_speed, self.max_speed)
+        self.population.positions += self.speed * delta * 0.001
+
+        self.bounce()
+        self.colision_detection()
+        self.last_update_time = time
+
+class SocialDistancing(RandomBehaviour):
+    def __init__(self):
+        super(SocialDistancing, self).__init__()
+        self.repulsion_distance = 10
+
+    def step(self, time):
+        delta = time - self.last_update_time
+        diffs = self.world.populations[0].positions[:,:,None]  - self.world.populations[0].positions[:,None,:]
+        distances = np.linalg.norm(diffs, axis=0)
 
         self.speed = np.clip(self.speed, -self.max_speed, self.max_speed)
         self.population.positions += self.speed * delta * 0.001
