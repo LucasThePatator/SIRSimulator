@@ -4,10 +4,12 @@ class Behaviour:
     def __init__(self):
         self.actor = None
         self.world = None
+        self.last_update_time = None
 
-    def initialize(self, actor, world):
+    def initialize(self, actor, world, time):
         self.actor = actor
         self.world = world
+        self.last_update_time = time
 
     def step(self, time):
         pass
@@ -29,10 +31,10 @@ class RandomBehaviour(Behaviour):
     def __init__(self):
         super(RandomBehaviour, self).__init__()
         self.speed = self.x_speed, self.y_speed = 0,0
-        self.max_speed = 1.5
-        self.acceleration = 0.5
+        self.max_speed = 50
+        self.acceleration = self.max_speed * 20
 
-        radius = self.acceleration * np.random.random_sample()
+        radius = self.max_speed * np.random.random_sample()
         angle = 2*np.pi * np.random.random_sample()
         x, y = radius * np.cos(angle), radius * np.sin(angle)
         self.x_speed = x
@@ -52,8 +54,9 @@ class RandomBehaviour(Behaviour):
             self.y_speed *= -1
 
     def step(self, time):
+        delta = time - self.last_update_time
         rands = np.random.random(2)
-        radius = self.acceleration * rands[0]
+        radius = self.acceleration * delta * rands[0] * 0.001
         angle = 2 * np.pi * rands[1]
         x, y = radius * np.cos(angle), radius * np.sin(angle)
         self.x_speed += x
@@ -62,8 +65,9 @@ class RandomBehaviour(Behaviour):
         self.x_speed = np.clip(self.x_speed, -self.max_speed, self.max_speed)
         self.y_speed = np.clip(self.y_speed, -self.max_speed, self.max_speed)
 
-        self.actor.position[0] += self.x_speed
-        self.actor.position[1] += self.y_speed
+        self.actor.position[0] += self.x_speed * delta * 0.001
+        self.actor.position[1] += self.y_speed * delta * 0.001
 
         self.bounce()
         self.colision_detection()
+        self.last_update_time = time
