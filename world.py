@@ -15,71 +15,65 @@ class Disease:
         self.last_update_time = time
 
     def step(self, time):
-        nb_actors = len(self.world.actors)
-        rands = np.random.random_sample(nb_actors*(nb_actors+1))
-
         delta = time - self.last_update_time
         current_proba = 1 - pow(1 - self.contagion_probability, delta/1000.0)
         
-        for a in self.world.actors:  
-            if a.state == 'I' and a.change_state_time + self.recovery_time < time:
-                a.state = 'R'
-                a.change_state_time = time
+        for p in self.world.populations:
+            to_recovery = np.logical_and(p.states[1], p.change_state_time + self.recovery_time < time)
+            p.states[1] = (1 - to_recovery)*p.states[1]
+            p.states[2] = np.logical_or(to_recovery, p.states[2])
 
-        for i in range(nb_actors - 1):
-            for j in range(i+1, nb_actors):
-                self.interact(self.world.actors[i], self.world.actors[j], rands[i + nb_actors*j], current_proba, time)
-
+        self.interact( current_proba, time)
         self.last_update_time = time
 
-    def interact(self, actor1, actor2, random_number, current_proba, time):
-        if (actor1.state == 'S' and actor2.state == 'I') or (actor1.state == 'I' and actor2.state == 'S') :
-            if random_number < current_proba:
-                diff = actor1.position-actor2.position
-                square_norm = np.dot(diff, diff)
-                if square_norm < self.contagion_distance_square:   
-                    if(actor1.state == 'S'):
-                        actor1.change_state_time = time
-                        actor1.state = 'I'
+    def interact(self, current_proba, time):
+        for p in self.world.populations:
+            potential_contamination = np.logical_and(p.states[1][:,None], p.states[0])
+            diffs = p.positions[:,:,None]  - p.positions[:,None,:]
+            distances = np.linalg.norm(diffs, axis=0)
+            potential_contamination = np.logical_and(distances < self.contagion_distance, potential_contamination)
+            potential_contamination = np.logical_and(potential_contamination, np.random.random_sample((p.size, p.size)) < current_proba)
 
-                    if(actor2.state == 'S'):
-                        actor2.change_state_time = time
-                        actor2.state = 'I'
+            contamination = np.sum(potential_contamination, axis=0) >= 1
+            p.states[0] -= contamination
+            p.states[1] += contamination
+            p.change_state_time = contamination*time + (1 - contamination)*p.change_state_time
+            
 
 class World :
     def __init__(self):
-        self.actors = []
+        self.populations = []
         self.disease = []
         self.meter_in_pixel = 1
         self.area = None
 
     def initialize(self, nb_actors, world_size, time):
         self.area = [0, 0, world_size[0], world_size[1]] #left, top, width, height
-
-        self.actors = []
-        for i in range(nb_actors):
-            position = np.random.random_sample(2) * np.array(self.area[2:-1])
-            self.actors.append(Actor(position, 'S', behaviours.RandomBehaviour(), self, i))
-            self.actors[-1].initialize(time)
-
-        self.actors.append(Actor(position, 'I', behaviours.RandomBehaviour(), self, i))
-        self.actors[-1].initialize(time)
+        self.populations = []
+        self.populations.append(Population(behaviours.RandomBehaviour(), self))
+        self.populations[-1].initialize(nb_actors, time)
+        self.populations[-1].states[0,0] = 0
+        self.populations[-1].states[1,0] = 1
 
     def step(self, time):
-        for a in self.actors:
-            a.step(time)
+        for p in self.populations:
+            p.step(time)
 
-class Actor :
-    def __init__(self, initial_position, initial_state, behaviour, world, ID):
+class Population :
+    def __init__(self, behaviour, world):
         self.world = world
-        self.position = initial_position
-        self.state = initial_state
+        self.positions = []
+        self.states = []
+        self.change_state_time = []
         self.behaviour = behaviour
-        self.ID = ID
-        self.change_state_time = None
-
-    def initialize(self, time):
-        self.change_state_time = time
+        self.size = None
+        
+    def initialize(self, size, time):
+        self.size = size
+        self.positions = np.random.random_sample((2, size)) * np.array(self.world.area[2:-1])
+        self.states = np.zeros((3, self.size))
+        self.states[0] = 1
+        self.change_state_time = np.array([time for _ in range(size)])
         self.behaviour.initialize(self, self.world, time)
 
     def step(self, time):

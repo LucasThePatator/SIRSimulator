@@ -26,7 +26,7 @@ class SIRSimulator:
 
     def initialize_simulation(self):
         time = self.clock.get_time()
-        self.world.initialize(150, self.size, time)
+        self.world.initialize(500, self.size, time)
         self.disease.initialize(self.world, time)
 
     def on_loop(self):
