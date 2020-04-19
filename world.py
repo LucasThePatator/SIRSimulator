@@ -51,7 +51,7 @@ class World :
     def initialize(self, nb_actors, world_size, time):
         self.area = [0, 0, world_size[0], world_size[1]] #left, top, width, height
         self.populations = []
-        self.populations.append(Population(behaviours.RandomBehaviour(), self))
+        self.populations.append(Population(behaviours.SocialDistancing(), self))
         self.populations[-1].initialize(nb_actors, time)
         self.populations[-1].states[0, 0] = 0
         self.populations[-1].states[1, 0] = 1

@@ -17,6 +17,7 @@ class SIRSimulator:
         self.cursor_steps = 0
         self.stats_period = 500
         self.STAT_EVENT = pygame.USEREVENT+1
+        self.compute_stats = False
 
         self.world = World()
         self.disease = Disease()
@@ -32,9 +33,9 @@ class SIRSimulator:
         time = pygame.time.get_ticks()
         self.world.initialize(300, self.size, time)
         self.disease.initialize(self.world, time)
-        self.statistics.initialize()
-
-        pygame.time.set_timer(self.STAT_EVENT, self.stats_period)
+        if self.compute_stats:
+            self.statistics.initialize()
+            pygame.time.set_timer(self.STAT_EVENT, self.stats_period)
 
     def on_loop(self):
         t0 = pygame.time.get_ticks()
@@ -65,6 +66,9 @@ class SIRSimulator:
             if event.key == pygame.K_p:
                 self.initialize_simulation()
                 self.run_simulation = True
+
+            if event.key == pygame.K_s:
+                self.run_simulation = False
 
         if event.type == self.STAT_EVENT:
             self.statistics.step(time, self.world)

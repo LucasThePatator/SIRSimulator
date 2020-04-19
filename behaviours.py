@@ -31,8 +31,8 @@ class RandomBehaviour(Behaviour):
     def __init__(self):
         super(RandomBehaviour, self).__init__()
         self.speed = []
-        self.max_speed = 25
-        self.max_acceleration = 500
+        self.max_speed = 40
+        self.max_acceleration = 200
     def initialize(self, population, world, time):
         super(RandomBehaviour, self).initialize(population, world, time)
         self.speed = np.ones((2,self.population.size))*10
@@ -67,11 +67,16 @@ class SocialDistancing(RandomBehaviour):
     def __init__(self):
         super(SocialDistancing, self).__init__()
         self.repulsion_distance = 10
+        self.repulstion_force = 10
 
     def step(self, time):
         delta = time - self.last_update_time
         diffs = self.world.populations[0].positions[:,:,None]  - self.world.populations[0].positions[:,None,:]
-        distances = np.linalg.norm(diffs, axis=0)
+        distance = np.linalg.norm(diffs, axis = 0)
+
+        repulsion_direction = -np.sum((distance < self.repulsion_distance) * diffs / (distance + 0.001), axis=1)
+
+        self.speed += self.repulstion_force*repulsion_direction/(np.linalg.norm(repulsion_direction, axis = 0) + 0.001)
 
         self.speed = np.clip(self.speed, -self.max_speed, self.max_speed)
         self.population.positions += self.speed * delta * 0.001
