@@ -22,9 +22,9 @@ class Disease:
         current_proba = 1 - pow(1 - self.contagion_probability, delta/1000.0)
         
         for a in self.world.actors:  
-             if a.state == 'I' and a.change_state_time + self.recovery_time < time:
-                 a.state = 'R'
-                 a.change_state_time = time
+            if a.state == 'I' and a.change_state_time + self.recovery_time < time:
+                a.state = 'R'
+                a.change_state_time = time
 
         for i in range(nb_actors - 1):
             for j in range(i+1, nb_actors):

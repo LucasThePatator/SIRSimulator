@@ -56,7 +56,7 @@ class RandomBehaviour(Behaviour):
 
     def step(self, time):
         delta = time - self.last_update_time
-        rands = np.random.random(2)
+        rands = np.random.random_sample(2)
         radius = self.acceleration * delta * rands[0] * 0.001
         angle = 2 * np.pi * rands[1]
         self.speed += radius * np.array([np.cos(angle), np.sin(angle)])
