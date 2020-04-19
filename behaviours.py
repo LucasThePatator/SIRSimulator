@@ -1,4 +1,5 @@
 import numpy as np
+from utils import clip
 
 class Behaviour:
     def __init__(self):
@@ -30,7 +31,7 @@ class Behaviour:
 class RandomBehaviour(Behaviour):
     def __init__(self):
         super(RandomBehaviour, self).__init__()
-        self.speed = self.x_speed, self.y_speed = 0,0
+        self.speed = np.array([0.0,0.0])
         self.max_speed = 50
         self.acceleration = self.max_speed * 20
 
@@ -58,15 +59,11 @@ class RandomBehaviour(Behaviour):
         rands = np.random.random(2)
         radius = self.acceleration * delta * rands[0] * 0.001
         angle = 2 * np.pi * rands[1]
-        x, y = radius * np.cos(angle), radius * np.sin(angle)
-        self.x_speed += x
-        self.y_speed += y
+        self.speed += radius * np.array([np.cos(angle), np.sin(angle)])
 
-        self.x_speed = np.clip(self.x_speed, -self.max_speed, self.max_speed)
-        self.y_speed = np.clip(self.y_speed, -self.max_speed, self.max_speed)
-
-        self.actor.position[0] += self.x_speed * delta * 0.001
-        self.actor.position[1] += self.y_speed * delta * 0.001
+        self.speed[0] = clip(self.speed[0], -self.max_speed, self.max_speed)
+        self.speed[1] = clip(self.speed[1], -self.max_speed, self.max_speed)
+        self.actor.position += self.speed * delta * 0.001
 
         self.bounce()
         self.colision_detection()

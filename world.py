@@ -16,7 +16,10 @@ class Disease:
 
     def step(self, time):
         nb_actors = len(self.world.actors)
-        rands = np.random.random(nb_actors*(nb_actors+1))
+        rands = np.random.random_sample(nb_actors*(nb_actors+1))
+
+        delta = time - self.last_update_time
+        current_proba = 1 - pow(1 - self.contagion_probability, delta/1000.0)
         
         for a in self.world.actors:  
              if a.state == 'I' and a.change_state_time + self.recovery_time < time:
@@ -25,16 +28,14 @@ class Disease:
 
         for i in range(nb_actors - 1):
             for j in range(i+1, nb_actors):
-                self.interact(self.world.actors[i], self.world.actors[j], rands[i + nb_actors*j], time)
+                self.interact(self.world.actors[i], self.world.actors[j], rands[i + nb_actors*j], current_proba, time)
 
         self.last_update_time = time
 
-    def interact(self, actor1, actor2, random_number, time):
-        delta = time - self.last_update_time
-        current_proba = 1 - pow(1 - self.contagion_probability, delta/1000.0)
+    def interact(self, actor1, actor2, random_number, current_proba, time):
         if (actor1.state == 'S' and actor2.state == 'I') or (actor1.state == 'I' and actor2.state == 'S') :
             if random_number < current_proba:
-                diff = np.array(actor1.position)-np.array(actor2.position)
+                diff = actor1.position-actor2.position
                 square_norm = np.dot(diff, diff)
                 if square_norm < self.contagion_distance_square:   
                     if(actor1.state == 'S'):
@@ -57,7 +58,7 @@ class World :
 
         self.actors = []
         for i in range(nb_actors):
-            position = [np.random.randint(world_size[0]), np.random.randint(world_size[1])]
+            position = np.random.random_sample(2) * np.array(self.area[2:-1])
             self.actors.append(Actor(position, 'S', behaviours.RandomBehaviour(), self, i))
             self.actors[-1].initialize(time)
 
