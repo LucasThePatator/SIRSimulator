@@ -5,8 +5,8 @@ class Disease:
     def __init__(self):
         self.contagion_probability = 0.5
         self.contagion_distance = 20
-        self.contagion_distance_square = self.contagion_distance*self.contagion_distance
-        self.recovery_time = 4*1000
+        self.contagion_distance_square = self.contagion_distance**2
+        self.recovery_time = 10*1000
         self.world = None
         self.last_update_time = None
 
@@ -30,8 +30,9 @@ class Disease:
         for p in self.world.populations:
             potential_contamination = np.logical_and(p.states[1][:,None], p.states[0])
             diffs = p.positions[:,:,None]  - p.positions[:,None,:]
-            distances = np.linalg.norm(diffs, axis=0)
-            potential_contamination = np.logical_and(distances < self.contagion_distance, potential_contamination)
+            distances = diffs ** 2
+            distances = distances[0,:,:] + distances[1,:,:]
+            potential_contamination = np.logical_and(distances < self.contagion_distance_square, potential_contamination)
             potential_contamination = np.logical_and(potential_contamination, np.random.random_sample((p.size, p.size)) < current_proba)
 
             contamination = np.sum(potential_contamination, axis=0) >= 1
@@ -39,13 +40,13 @@ class Disease:
             p.states[1] += contamination
             p.change_state_time = contamination*time + (1 - contamination)*p.change_state_time
             
-
 class World :
     def __init__(self):
         self.populations = []
         self.disease = []
         self.meter_in_pixel = 1
         self.area = None
+        self.last_update_time = None
 
     def initialize(self, nb_actors, world_size, time):
         self.area = [0, 0, world_size[0], world_size[1]] #left, top, width, height

@@ -5,6 +5,7 @@ from colorama import Cursor
 
 from graphics import Graphics
 from world import World, Disease
+from statistics import Statistics
 
 class SIRSimulator:
     def __init__(self):
@@ -14,9 +15,12 @@ class SIRSimulator:
         self.run_simulation = False
         self.clock = pygame.time.Clock()
         self.cursor_steps = 0
+        self.stats_period = 500
+        self.STAT_EVENT = pygame.USEREVENT+1
 
         self.world = World()
         self.disease = Disease()
+        self.statistics = Statistics()
 
     def on_init(self):
         colorama.init()
@@ -26,8 +30,11 @@ class SIRSimulator:
 
     def initialize_simulation(self):
         time = pygame.time.get_ticks()
-        self.world.initialize(200, self.size, time)
+        self.world.initialize(300, self.size, time)
         self.disease.initialize(self.world, time)
+        self.statistics.initialize()
+
+        pygame.time.set_timer(self.STAT_EVENT, self.stats_period)
 
     def on_loop(self):
         t0 = pygame.time.get_ticks()
@@ -50,6 +57,7 @@ class SIRSimulator:
         colorama.deinit()
 
     def on_event(self, event):
+        time = pygame.time.get_ticks()
         if event.type == pygame.QUIT:
             self.running = False
 
@@ -57,6 +65,10 @@ class SIRSimulator:
             if event.key == pygame.K_p:
                 self.initialize_simulation()
                 self.run_simulation = True
+
+        if event.type == self.STAT_EVENT:
+            self.statistics.step(time, self.world)
+            
 
     def on_execute(self):
         self.running = self.on_init()
