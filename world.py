@@ -1,5 +1,7 @@
-import behaviours as beh
+import math
 import numpy as np
+
+import behaviours as beh
 
 class Disease:
     def __init__(self):
@@ -51,17 +53,22 @@ class World :
     behaviours = [beh.SocialDistancing(), beh.DummyPartier(),
                  beh.RandomBehaviour()]
     names = ['Social Distancing', 'Dummy', 'Random']
+
     def initialize(self, behaviours = behaviours,
                    names = dict(zip(behaviours, names)),
-                   nb_actors = 100, world_size = (500, 500), time = 0):
+                   nb_actors = 100, weight_actors = [1, 0, 0],
+                   world_size = (500, 500), time = 0):
         self.area = [0, 0, world_size[0], world_size[1]] #left, top, width, height
         self.populations = []
-        for behaviour in behaviours:
+        for i, behaviour in enumerate(behaviours):
+            if weight_actors[i] == 0:
+                continue
             self.populations.append(
                 Population(behaviour = behaviour,
                            world = self))
-            self.populations[-1].initialize(nb_actors, time,
-                                            name = names[behaviour])
+            self.populations[-1].initialize(
+                math.ceil(nb_actors * weight_actors[i]),
+                time, name = names[behaviour])
             self.populations[-1].states[0, 0] = 0
             self.populations[-1].states[1, 0] = 1
         self.last_update_time = time

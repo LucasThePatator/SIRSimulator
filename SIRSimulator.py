@@ -21,6 +21,7 @@ class SIRSimulator:
         self.compute_stats = False
         self.pop_size = pop_size
         self.world_size = world_size
+        self.weight_actors = [0, 1, 0]
 
         self.world = World()
         self.disease = Disease()
@@ -38,6 +39,7 @@ class SIRSimulator:
     def initialize_simulation(self):
         self.simulation_time = 0
         self.world.initialize(nb_actors = self.pop_size,
+                              weight_actors = self.weight_actors,
                               world_size = self.size,
                               time = 0)
         self.disease.initialize(self.world, 0)
