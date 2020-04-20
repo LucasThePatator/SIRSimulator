@@ -48,17 +48,20 @@ class World :
         self.area = None
         self.last_update_time = None
 
-    def initialize(self, behaviors = [beh.SocialDistancing(),
-                                      beh.DummyPartier(),
-                                      beh.RandomBehaviour()],
+    behaviours = [beh.SocialDistancing(), beh.DummyPartier(),
+                 beh.RandomBehaviour()]
+    names = ['Social Distancing', 'Dummy', 'Random']
+    def initialize(self, behaviours = behaviours,
+                   names = dict(zip(behaviours, names)),
                    nb_actors = 100, world_size = (500, 500), time = 0):
-        print(world_size)
         self.area = [0, 0, world_size[0], world_size[1]] #left, top, width, height
         self.populations = []
-        for behaviour in behaviors:
+        for behaviour in behaviours:
             self.populations.append(
-                Population(behaviour, self))
-            self.populations[-1].initialize(nb_actors, time)
+                Population(behaviour = behaviour,
+                           world = self))
+            self.populations[-1].initialize(nb_actors, time,
+                                            name = names[behaviour])
             self.populations[-1].states[0, 0] = 0
             self.populations[-1].states[1, 0] = 1
         self.last_update_time = time
@@ -75,14 +78,16 @@ class Population :
         self.change_state_time = []
         self.behaviour = behaviour
         self.size = None
+        self.name = None
         
-    def initialize(self, size, time):
+    def initialize(self, size, time, name = 'DEFAULT'):
         self.size = size
         self.positions = np.random.random_sample((2, size)) * np.array(self.world.area[2:-1])
         self.states = np.zeros((3, self.size))
         self.states[0] = 1
         self.change_state_time = np.array([time for _ in range(size)])
-        self.behaviour.initialize(self, self.world, time)
+        self.behaviour.initialize(self, self.world, time, name = name)
+        self.name = name
 
     def step(self, time):
         self.behaviour.step(time)
