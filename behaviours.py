@@ -92,7 +92,7 @@ class SocialDistancing(RandomBehaviour):
         self.last_update_time = time
 
 class  DummyPartier(SocialDistancing):
-    def __init__(self, attraction_force, attraction_range):
+    def __init__(self, attraction_force = 5, attraction_range = 10):
         super().__init__()
         self.repulsion_distance = attraction_range
         self.repulstion_force = - attraction_force
