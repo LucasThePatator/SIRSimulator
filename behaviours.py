@@ -90,3 +90,11 @@ class SocialDistancing(RandomBehaviour):
         self.bounce()
         self.colision_detection()
         self.last_update_time = time
+
+class  DummyPartier(SocialDistancing):
+    def __init__(self, attraction_force, attraction_range):
+        super().__init__()
+        self.repulsion_distance = attraction_range
+        self.repulstion_force = - attraction_force
+        self.speed_decay = 0.5
+        self.max_acceleration = 20
