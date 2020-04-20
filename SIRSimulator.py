@@ -73,7 +73,7 @@ class SIRSimulator:
                 self.run_simulation = True
 
             if event.key == pygame.K_s:
-                self.run_simulation = False
+                self.run_simulation = not self.run_simulation
 
             if event.key == pygame.K_ESCAPE:
                 self.running = False
