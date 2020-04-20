@@ -9,9 +9,9 @@ from world import World, Disease
 from statistics import Statistics
 
 class SIRSimulator:
-    def __init__(self, popSize = 100, worldSize = (500, 500)):
+    def __init__(self, pop_size = 100, world_size = (500, 500)):
         self.graphics = Graphics()
-        self.size = self.width, self.height = worldSize
+        self.size = self.width, self.height = world_size
         self.running = False
         self.run_simulation = False
         self.clock = pygame.time.Clock()
@@ -19,8 +19,8 @@ class SIRSimulator:
         self.stats_period = 500
         self.STAT_EVENT = pygame.USEREVENT+1
         self.compute_stats = False
-        self.popSize = popSize
-        self.worldSize = worldSize
+        self.pop_size = pop_size
+        self.world_size = world_size
 
         self.world = World()
         self.disease = Disease()
@@ -37,7 +37,7 @@ class SIRSimulator:
 
     def initialize_simulation(self):
         self.simulation_time = 0
-        self.world.initialize(self.popSize, self.size, 0)
+        self.world.initialize(self.pop_size, self.size, 0)
         self.disease.initialize(self.world, 0)
         if self.compute_stats:
             self.statistics.initialize()
@@ -49,12 +49,12 @@ class SIRSimulator:
         self.simulation_time += self.simulation_time_step_ms
         self.world.step(self.simulation_time)
         t1 = pygame.time.get_ticks()
-        #print("Time taken by world step " + str(t1 - t0) + "    ")
+        print("Time taken by world step " + str(t1 - t0) + "    ")
         self.cursor_steps += 1
 
         self.disease.step(self.simulation_time)
         t2 = pygame.time.get_ticks()
-        #print("Time taken by disease step " + str(t2 - t1) + "    ")
+        print("Time taken by disease step " + str(t2 - t1) + "    ")
         self.cursor_steps += 1
 
     def on_render(self):
@@ -94,39 +94,38 @@ class SIRSimulator:
             t0 = pygame.time.get_ticks()
             self.on_render()
             t1 = pygame.time.get_ticks()
-            #print("Time taken by render step " + str(t1 - t0) + "    ")
+            print("Time taken by render step " + str(t1 - t0) + "    ")
             self.cursor_steps += 1
-            #print("fps : " + str(self.clock.get_fps()) + "    ")
+            print("fps : " + str(self.clock.get_fps()) + "    ")
             self.cursor_steps += 1
-            #print(Cursor.UP(self.cursor_steps + 1))
+            print(Cursor.UP(self.cursor_steps + 1))
             self.clock.tick(60)
         self.on_cleanup()
 
 def format_args(args):
-    if len(args.worldSize) == 0:
-        args.worldSize = [500, 500]
-    elif len(args.worldSize) == 1:
-        args.worldSize = [args.worldSize[0], args.worldSize[0]]
+    if len(args.world_size) == 0:
+        args.world_size = [500, 500]
+    elif len(args.world_size) == 1:
+        args.world_size = [args.world_size[0], args.world_size[0]]
     else:
-        args.worldSize = [args.worldSize[0], args.worldSize[1]]
-    print(args.worldSize)
-    pass
+        args.world_size = [args.world_size[0], args.world_size[1]]
         
 if __name__ == "__main__":
     parser = arg.ArgumentParser(description = '',
                                 epilog = '',
                                 add_help = True)
-    parser.add_argument('--popSize', dest = 'popSize', nargs = '?',
+    parser.add_argument('--pop_size', dest = 'pop_size', nargs = '?',
                         action = 'store', type = int, required = False,
                         default = 100,
                         help = ('The total number of individuals in the '
                                 + 'populations'))
-    parser.add_argument('--worldSize', dest = 'worldSize', nargs = '*',
+    parser.add_argument('--world_size', dest = 'world_size', nargs = '*',
                         action = 'store', type = int, required = False,
                         default = [500, 500],
                         help = ('The world size'))
 
     args = parser.parse_args()
     format_args(args)
-    SIRSim = SIRSimulator(popSize = args.popSize, worldSize = tuple(args.worldSize))
+    SIRSim = SIRSimulator(pop_size = args.pop_size,
+                          world_size = tuple(args.world_size))
     SIRSim.on_execute()
