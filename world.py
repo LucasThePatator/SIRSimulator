@@ -1,4 +1,5 @@
 import math
+import scipy.stats as sst
 import numpy as np
 
 import behaviours as beh
@@ -89,7 +90,12 @@ class Population :
         
     def initialize(self, size, time, name = 'DEFAULT'):
         self.size = size
-        self.positions = np.random.random_sample((2, size)) * np.array(self.world.area[2:-1])
+
+        ## Give compatible shapes
+        area = np.array(self.world.area[2:]).reshape((2, 1))
+        loc = np.zeros(shape = (1, size))
+        self.positions = sst.uniform.rvs(loc = loc,
+                                         scale = area)
         self.states = np.zeros((3, self.size))
         self.states[0] = 1
         self.change_state_time = np.array([time for _ in range(size)])
