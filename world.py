@@ -1,4 +1,4 @@
-import behaviours
+import behaviours as beh
 import numpy as np
 
 class Disease:
@@ -48,13 +48,19 @@ class World :
         self.area = None
         self.last_update_time = None
 
-    def initialize(self, nb_actors, world_size, time):
+    def initialize(self, behaviors = [beh.SocialDistancing(),
+                                      beh.DummyPartier(),
+                                      beh.RandomBehaviour()],
+                   nb_actors = 100, world_size = (500, 500), time = 0):
+        print(world_size)
         self.area = [0, 0, world_size[0], world_size[1]] #left, top, width, height
         self.populations = []
-        self.populations.append(Population(behaviours.SocialDistancing(), self))
-        self.populations[-1].initialize(nb_actors, time)
-        self.populations[-1].states[0, 0] = 0
-        self.populations[-1].states[1, 0] = 1
+        for behaviour in behaviors:
+            self.populations.append(
+                Population(behaviour, self))
+            self.populations[-1].initialize(nb_actors, time)
+            self.populations[-1].states[0, 0] = 0
+            self.populations[-1].states[1, 0] = 1
         self.last_update_time = time
 
     def step(self, time):
