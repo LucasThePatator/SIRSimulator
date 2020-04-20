@@ -20,10 +20,20 @@ class Graphics:
 
     def render_world(self, world):
         self.display_surf.fill(Color(0,0,0,0))
-        for p in world.populations:
+        font = pygame.font.SysFont('Tahoma', 10, True, False)
+        symbols = [
+            'x', 'o', 's']
+        symbols = [p.behaviour.name[0] for p in world.populations]
+
+        for j, p in enumerate(world.populations):
             indices = np.argwhere(p.states)
+
             for i in range(len(indices)):
                 current_color = self.sprites[indices[i][0]]
-                pygame.draw.circle(self.display_surf, current_color, [int(x) for x in p.positions[:,indices[i][1]]], 5)
-
+                renders = [
+                    font.render(symb, True, current_color)
+                    for symb in symbols]                            
+                self.display_surf.blit(
+                    renders[j % len(renders)],
+                    [int(x) for x in p.positions[:,indices[i][1]]])
         pygame.display.flip()
