@@ -23,6 +23,9 @@ class SIRSimulator:
         self.disease = Disease()
         self.statistics = Statistics()
 
+        self.simulation_time_step_ms = 50
+        self.simulation_time = 0
+
     def on_init(self):
         colorama.init()
         pygame.init()
@@ -30,9 +33,9 @@ class SIRSimulator:
         return True
 
     def initialize_simulation(self):
-        time = pygame.time.get_ticks()
-        self.world.initialize(300, self.size, time)
-        self.disease.initialize(self.world, time)
+        self.simulation_time = 0
+        self.world.initialize(200, self.size, 0)
+        self.disease.initialize(self.world, 0)
         if self.compute_stats:
             self.statistics.initialize()
             pygame.time.set_timer(self.STAT_EVENT, self.stats_period)
@@ -40,12 +43,13 @@ class SIRSimulator:
     def on_loop(self):
         t0 = pygame.time.get_ticks()
 
-        self.world.step(t0)
+        self.simulation_time += self.simulation_time_step_ms
+        self.world.step(self.simulation_time)
         t1 = pygame.time.get_ticks()
         print("Time taken by world step " + str(t1 - t0) + "    ")
         self.cursor_steps += 1
 
-        self.disease.step(t0)
+        self.disease.step(self.simulation_time)
         t2 = pygame.time.get_ticks()
         print("Time taken by disease step " + str(t2 - t1) + "    ")
         self.cursor_steps += 1

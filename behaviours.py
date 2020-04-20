@@ -31,11 +31,12 @@ class RandomBehaviour(Behaviour):
     def __init__(self):
         super(RandomBehaviour, self).__init__()
         self.speed = []
-        self.max_speed = 40
-        self.max_acceleration = 200
+        self.max_speed = 20
+        self.max_acceleration = 40
     def initialize(self, population, world, time):
         super(RandomBehaviour, self).initialize(population, world, time)
-        self.speed = np.ones((2,self.population.size))*10
+        acceleration_polar_coords = np.array([[self.max_acceleration], [2*np.pi]]) * np.random.random_sample((2,self.population.size))
+        self.speed = acceleration_polar_coords[0] * [np.cos(acceleration_polar_coords[1]), np.sin(acceleration_polar_coords[1])]
         self.last_update_time = time
 
     def bounce(self):
@@ -66,17 +67,22 @@ class RandomBehaviour(Behaviour):
 class SocialDistancing(RandomBehaviour):
     def __init__(self):
         super(SocialDistancing, self).__init__()
-        self.repulsion_distance = 10
-        self.repulstion_force = 10
+        self.repulsion_distance = 18
+        self.repulstion_force = 5
+        self.speed_decay = 0.5
+        self.max_acceleration = 20
 
     def step(self, time):
+        super(SocialDistancing, self).step(time)
         delta = time - self.last_update_time
         diffs = self.world.populations[0].positions[:,:,None]  - self.world.populations[0].positions[:,None,:]
         distance = np.linalg.norm(diffs, axis = 0)
 
-        repulsion_direction = -np.sum((distance < self.repulsion_distance) * diffs / (distance + 0.001), axis=1)
+        repulsion_direction = -np.sum(np.clip(self.repulsion_distance - distance, 0, self.repulstion_force) * diffs / (distance + 0.001), axis=1)
 
-        self.speed += self.repulstion_force*repulsion_direction/(np.linalg.norm(repulsion_direction, axis = 0) + 0.001)
+        current_decay = pow(self.speed_decay, delta/1000)
+        self.speed *= current_decay
+        self.speed += repulsion_direction
 
         self.speed = np.clip(self.speed, -self.max_speed, self.max_speed)
         self.population.positions += self.speed * delta * 0.001
