@@ -52,8 +52,9 @@ class World :
         self.last_update_time = None
 
     behaviours = [beh.SocialDistancing(), beh.DummyPartier(),
-                 beh.RandomBehaviour()]
-    names = ['Social Distancing', 'Dummy', 'Random']
+                  beh.RandomBehaviour(), beh.Behaviour(),
+                  beh.PoolBehaviour()]
+    names = ['Social Distancing', 'Dummy', 'Random', 'Frozen', 'Pool']
 
     def initialize(self, behaviours = behaviours,
                    names = dict(zip(behaviours, names)),

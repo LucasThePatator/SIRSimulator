@@ -21,7 +21,7 @@ class SIRSimulator:
         self.compute_stats = False
         self.pop_size = pop_size
         self.world_size = world_size
-        self.weight_actors = [0, 1, 0]
+        self.weight_actors = [1, 0, 0, 0, 0]
 
         self.world = World()
         self.disease = Disease()
@@ -53,12 +53,12 @@ class SIRSimulator:
         self.simulation_time += self.simulation_time_step_ms
         self.world.step(self.simulation_time)
         t1 = pygame.time.get_ticks()
-        print("Time taken by world step " + str(t1 - t0) + "    ")
+        #print("Time taken by world step " + str(t1 - t0) + "    ")
         self.cursor_steps += 1
 
         self.disease.step(self.simulation_time)
         t2 = pygame.time.get_ticks()
-        print("Time taken by disease step " + str(t2 - t1) + "    ")
+        #print("Time taken by disease step " + str(t2 - t1) + "    ")
         self.cursor_steps += 1
 
     def on_render(self):
@@ -98,11 +98,11 @@ class SIRSimulator:
             t0 = pygame.time.get_ticks()
             self.on_render()
             t1 = pygame.time.get_ticks()
-            print("Time taken by render step " + str(t1 - t0) + "    ")
+            #print("Time taken by render step " + str(t1 - t0) + "    ")
             self.cursor_steps += 1
-            print("fps : " + str(self.clock.get_fps()) + "    ")
+            #print("fps : " + str(self.clock.get_fps()) + "    ")
             self.cursor_steps += 1
-            print(Cursor.UP(self.cursor_steps + 1))
+            #print(Cursor.UP(self.cursor_steps + 1))
             self.clock.tick(60)
         self.on_cleanup()
 

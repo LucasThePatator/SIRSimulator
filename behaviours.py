@@ -8,12 +8,23 @@ class Behaviour:
 
     def initialize(self, population, world, time, name = 'DEFAULT'):
         self.population = population
+        self.speed = np.zeros(population.positions.shape)
         self.world = world
         self.last_update_time = time
         self.name = name
+    
+    def bounce(self):
+        left_bounce = self.population.positions[0] < self.world.area[0]
+        self.speed[0] *= 1 - 2 * left_bounce
 
-    def step(self, time):
-        pass
+        top_bounce = self.population.positions[1] < self.world.area[1]
+        self.speed[1] *= 1 - 2 * top_bounce
+
+        right_bounce = self.population.positions[0] >= self.world.area[2]
+        self.speed[0] *= 1 - 2 * right_bounce
+
+        bottom_bounce = self.population.positions[1] >= self.world.area[3]
+        self.speed[1] *= 1 - 2 * bottom_bounce    
 
     def colision_detection(self):
         left_oob = self.population.positions[0] < self.world.area[0]
@@ -28,9 +39,30 @@ class Behaviour:
         bottom_oob = self.population.positions[1] >= self.world.area[3]
         self.population.positions[1] = bottom_oob*self.world.area[3] + (1 - bottom_oob)*self.population.positions[1] 
 
+    def step(self, time):
+        delta = time - self.last_update_time
+        self.population.positions += self.speed * delta * 0.001        
+        self.bounce()
+        self.colision_detection()
+        self.last_update_time = time
+
+class PoolBehaviour(Behaviour):
+    def __init__(self):
+        super().__init__()
+        self.speed = []
+        self.max_speed = 20
+        self.max_acceleration = 40
+        
+    def initialize(self, population, world, time, name = 'Random'):
+        super().initialize(population, world, time, name = name)
+        acceleration_polar_coords = np.array([[self.max_acceleration], [2*np.pi]]) * np.random.random_sample((2,self.population.size))
+        self.speed = acceleration_polar_coords[0] * [np.cos(acceleration_polar_coords[1]), np.sin(acceleration_polar_coords[1])]
+        self.last_update_time = time    
+
+        
 class RandomBehaviour(Behaviour):
     def __init__(self):
-        super(RandomBehaviour, self).__init__()
+        super().__init__()
         self.speed = []
         self.max_speed = 20
         self.max_acceleration = 40
@@ -42,19 +74,6 @@ class RandomBehaviour(Behaviour):
         self.speed = acceleration_polar_coords[0] * [np.cos(acceleration_polar_coords[1]), np.sin(acceleration_polar_coords[1])]
         self.last_update_time = time
 
-    def bounce(self):
-        left_bounce = self.population.positions[0] < self.world.area[0]
-        self.speed[0] *= 1 - 2 * left_bounce
-
-        top_bounce = self.population.positions[1] < self.world.area[1]
-        self.speed[1] *= 1 - 2 * top_bounce
-
-        right_bounce = self.population.positions[0] >= self.world.area[2]
-        self.speed[0] *= 1 - 2 * right_bounce
-
-        bottom_bounce = self.population.positions[1] >= self.world.area[3]
-        self.speed[1] *= 1 - 2 * bottom_bounce
-
     def step(self, time):
         delta = time - self.last_update_time
         acceleration_polar_coords = np.array([[self.max_acceleration * delta * 0.001], [2*np.pi]]) * np.random.random_sample((2,self.population.size))
@@ -62,14 +81,12 @@ class RandomBehaviour(Behaviour):
 
         self.speed = np.clip(self.speed, -self.max_speed, self.max_speed)
         self.population.positions += self.speed * delta * 0.001
+        super().step(time = time)
 
-        self.bounce()
-        self.colision_detection()
-        self.last_update_time = time
 
 class SocialDistancing(RandomBehaviour):
     def __init__(self):
-        super(SocialDistancing, self).__init__()
+        super().__init__()
         self.repulsion_distance = 18
         self.repulstion_force = 5
         self.speed_decay = 0.5
@@ -79,7 +96,6 @@ class SocialDistancing(RandomBehaviour):
         super().initialize(population, world, time, name = name)
 
     def step(self, time):
-        super(SocialDistancing, self).step(time)
         delta = time - self.last_update_time
         diffs = self.world.populations[0].positions[:,:,None]  - self.world.populations[0].positions[:,None,:]
         distance = np.linalg.norm(diffs, axis = 0)
@@ -93,9 +109,7 @@ class SocialDistancing(RandomBehaviour):
         self.speed = np.clip(self.speed, -self.max_speed, self.max_speed)
         self.population.positions += self.speed * delta * 0.001
 
-        self.bounce()
-        self.colision_detection()
-        self.last_update_time = time
+        super().step(time = time)
 
 class  DummyPartier(SocialDistancing):
     def __init__(self, attraction_force = 5, attraction_range = 10):
