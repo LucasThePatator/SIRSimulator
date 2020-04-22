@@ -43,7 +43,7 @@ class Disease:
             p.states[1] += contamination
             p.change_state_time = contamination*time + (1 - contamination)*p.change_state_time
             
-class World :
+class World:
     def __init__(self, nb_actors = 100, weight_actors = np.array([1, 1]),
                  world_size = (500, 500), time = 0):
         self.area = [0, 0, world_size[0], world_size[1]]        
@@ -70,8 +70,10 @@ class World :
             population.set_behaviour(
                 behaviour = beh_init(population = population, world = self,
                                     time = 0, name = names[beh_init]))
+            population.name = names[beh_init]
             if population.size != 0:
                 population.states[1, 0] = 1
+                population.states[0, 0] = 0
                 self.populations.append(population)
 
     def step(self, time):
