@@ -1,18 +1,13 @@
 import numpy as np
 
 class Behaviour:
-    def __init__(self):
-        self.population = None
-        self.world = None
-        self.last_update_time = None
-
-    def initialize(self, population, world, time, name = 'DEFAULT'):
+    def __init__(self, population, world, time, name = 'DEFAULT'):
         self.population = population
-        self.speed = np.zeros(population.positions.shape)
         self.world = world
+        self.speed = np.zeros(population.positions.shape)        
         self.last_update_time = time
-        self.name = name
-    
+        self.name = name        
+
     def bounce(self):
         left_bounce = self.population.positions[0] < self.world.area[0]
         self.speed[0] *= 1 - 2 * left_bounce
@@ -47,32 +42,21 @@ class Behaviour:
         self.last_update_time = time
 
 class PoolBehaviour(Behaviour):
-    def __init__(self):
-        super().__init__()
-        self.speed = []
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.max_speed = 20
         self.max_acceleration = 40
-        
-    def initialize(self, population, world, time, name = 'Random'):
-        super().initialize(population, world, time, name = name)
         acceleration_polar_coords = np.array([[self.max_acceleration], [2*np.pi]]) * np.random.random_sample((2,self.population.size))
-        self.speed = acceleration_polar_coords[0] * [np.cos(acceleration_polar_coords[1]), np.sin(acceleration_polar_coords[1])]
-        self.last_update_time = time    
-
+        self.speed = acceleration_polar_coords[0] * [np.cos(acceleration_polar_coords[1]), np.sin(acceleration_polar_coords[1])]        
+        
         
 class RandomBehaviour(Behaviour):
-    def __init__(self):
-        super().__init__()
-        self.speed = []
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.max_speed = 20
         self.max_acceleration = 40
-        
-    def initialize(self, population, world, time, name = 'Random'):
-        super(RandomBehaviour, self).initialize(population, world, time,
-                                                name = name)
         acceleration_polar_coords = np.array([[self.max_acceleration], [2*np.pi]]) * np.random.random_sample((2,self.population.size))
         self.speed = acceleration_polar_coords[0] * [np.cos(acceleration_polar_coords[1]), np.sin(acceleration_polar_coords[1])]
-        self.last_update_time = time
 
     def step(self, time):
         delta = time - self.last_update_time
@@ -80,20 +64,16 @@ class RandomBehaviour(Behaviour):
         self.speed += acceleration_polar_coords[0] * [np.cos(acceleration_polar_coords[1]), np.sin(acceleration_polar_coords[1])]
 
         self.speed = np.clip(self.speed, -self.max_speed, self.max_speed)
-        self.population.positions += self.speed * delta * 0.001
         super().step(time = time)
 
-
-class SocialDistancing(RandomBehaviour):
-    def __init__(self):
-        super().__init__()
-        self.repulsion_distance = 18
+class SocialDistancing(Behaviour):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.max_speed = 20
+        self.max_acceleration = 40        
+        self.repulsion_distance = 20
         self.repulstion_force = 5
         self.speed_decay = 0.5
-        self.max_acceleration = 20
-
-    def initialize(self, population, world, time, name = 'Social Distance'):
-        super().initialize(population, world, time, name = name)
 
     def step(self, time):
         delta = time - self.last_update_time
@@ -111,14 +91,11 @@ class SocialDistancing(RandomBehaviour):
 
         super().step(time = time)
 
-class  DummyPartier(SocialDistancing):
-    def __init__(self, attraction_force = 5, attraction_range = 10):
-        super().__init__()
+class DummyPartier(SocialDistancing):
+    def __init__(self, attraction_force = 5, attraction_range = 100,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.repulsion_distance = attraction_range
         self.repulstion_force = - attraction_force
         self.speed_decay = 0.5
         self.max_acceleration = 20
-
-    def initialize(self, population, world, time, name = 'Dummy'):
-        super(SocialDistancing, self).initialize(population, world, time,
-                                                 name = name)        

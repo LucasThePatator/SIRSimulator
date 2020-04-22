@@ -44,64 +44,61 @@ class Disease:
             p.change_state_time = contamination*time + (1 - contamination)*p.change_state_time
             
 class World :
-    def __init__(self):
-        self.populations = []
+    def __init__(self, nb_actors = 100, weight_actors = np.array([1, 1]),
+                 world_size = (500, 500), time = 0):
+        self.area = [0, 0, world_size[0], world_size[1]]        
         self.disease = []
         self.meter_in_pixel = 1
-        self.area = None
-        self.last_update_time = None
+        weight_actors = np.array(weight_actors)
 
-    behaviours = [beh.SocialDistancing(), beh.DummyPartier(),
-                  beh.RandomBehaviour(), beh.Behaviour(),
-                  beh.PoolBehaviour()]
-    names = ['Social Distancing', 'Dummy', 'Random', 'Frozen', 'Pool']
+        behaviours_func = [beh.SocialDistancing, beh.DummyPartier,
+                           beh.RandomBehaviour, beh.Behaviour,
+                           beh.PoolBehaviour]
+        names = ['Social Distancing', 'Dummy', 'Random', 'Frozen', 'Pool']
+        behaviours_func = [beh.Behaviour, beh.PoolBehaviour,
+                           beh.RandomBehaviour, beh.SocialDistancing,
+                           beh.DummyPartier]
+        names = ['Frozen', 'Pool', 'Random', 'Social distancing', 'Dummy']
+        names = dict(zip(behaviours_func, names))
+        populations = [Population(world = self, time = 0,
+                                  size = math.ceil(nb_actors * w))
+                       for w in weight_actors]
 
-    def initialize(self, behaviours = behaviours,
-                   names = dict(zip(behaviours, names)),
-                   nb_actors = 100, weight_actors = [1, 0, 0],
-                   world_size = (500, 500), time = 0):
-        self.area = [0, 0, world_size[0], world_size[1]] #left, top, width, height
         self.populations = []
-        for i, behaviour in enumerate(behaviours):
-            if weight_actors[i] == 0:
-                continue
-            self.populations.append(
-                Population(behaviour = behaviour,
-                           world = self))
-            self.populations[-1].initialize(
-                math.ceil(nb_actors * weight_actors[i]),
-                time, name = names[behaviour])
-            self.populations[-1].states[0, 0] = 0
-            self.populations[-1].states[1, 0] = 1
-        self.last_update_time = time
+        for i, population in enumerate(populations):
+            beh_init = behaviours_func[i]
+            population.set_behaviour(
+                behaviour = beh_init(population = population, world = self,
+                                    time = 0, name = names[beh_init]))
+            if population.size != 0:
+                population.states[1, 0] = 1
+                self.populations.append(population)
 
     def step(self, time):
         for p in self.populations:
             p.step(time)
 
 class Population :
-    def __init__(self, behaviour, world):
-        self.world = world
-        self.positions = []
-        self.states = []
-        self.change_state_time = []
-        self.behaviour = behaviour
-        self.size = None
-        self.name = None
-        
-    def initialize(self, size, time, name = 'DEFAULT'):
-        self.size = size
+    def __init__(self, world, time = 0, size = 1, name = 'DEFAULT'):
 
         ## Give compatible shapes
-        area = np.array(self.world.area[2:]).reshape((2, 1))
+        area = np.array(world.area[2:]).reshape((2, 1))
         loc = np.zeros(shape = (1, size))
-        self.positions = sst.uniform.rvs(loc = loc,
-                                         scale = area)
-        self.states = np.zeros((3, self.size))
-        self.states[0] = 1
+        self.positions = sst.uniform.rvs(loc = loc, scale = area)
+        
+        self.world = world
         self.change_state_time = np.array([time for _ in range(size)])
-        self.behaviour.initialize(self, self.world, time, name = name)
+        self.behaviour = beh.Behaviour(population = self, world = world,
+                                       time = time)
+        self.size = size
         self.name = name
+
+        self.states = np.zeros(shape = (3, self.size))
+        self.states[0] = 1
+
+
+    def set_behaviour(self, behaviour):
+        self.behaviour = behaviour
 
     def step(self, time):
         self.behaviour.step(time)
