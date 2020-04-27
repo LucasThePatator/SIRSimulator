@@ -1,5 +1,7 @@
-import pygame
-from pygame.locals import *
+import contextlib
+with contextlib.redirect_stdout(None): # Remove pygame prints during import
+    import pygame
+    from pygame.locals import *
 import colorama
 from colorama import Cursor
 import argparse as arg
